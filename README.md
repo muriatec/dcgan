@@ -1,1 +1,1 @@
-"# ece285-dcgan" 
+# ECE 285-DCGAN
