@@ -25,7 +25,6 @@ class Generator(nn.Module):
     def forward(self, x):
         return self.main(x)
     
-
 class Discriminator(nn.Module):
     def __init__(self, ndf=128, nc=3):
         super(Discriminator, self).__init__()
