@@ -2,10 +2,11 @@ import torch
 import torch.nn as nn
 
 class Generator(nn.Module):
-    def __init__(self, nz=100, ngf=128, nc=3):
+    def __init__(self, nz=100, ngf=128, nc=3, img_size=96):
+        self.init_size = img_size // 2 ** 4
         super(Generator, self).__init__()
         self.main = nn.Sequential(
-            nn.ConvTranspose2d(in_channels=nz, out_channels=ngf*8, kernel_size=6), # input z: 100 x 1
+            nn.ConvTranspose2d(in_channels=nz, out_channels=ngf*8, kernel_size=self.init_size), # input z: 100 x 1
             nn.BatchNorm2d(num_features=ngf*8),
             nn.ReLU(inplace=True), # output size: 1024 x 6 x 6
             nn.ConvTranspose2d(in_channels=ngf*8, out_channels=ngf*4, kernel_size=4, stride=2, padding=1),
@@ -26,8 +27,9 @@ class Generator(nn.Module):
         return self.main(x)
     
 class Discriminator(nn.Module):
-    def __init__(self, ndf=128, nc=3):
+    def __init__(self, ndf=128, nc=3, img_size=96):
         super(Discriminator, self).__init__()
+        self.ds_size = img_size // 2 ** 4 # downsample kernel size
         self.main = nn.Sequential(
             nn.Conv2d(in_channels=nc, out_channels=ndf, kernel_size=4, stride=2, padding=1),
             # not applying batchnorm to the discriminator input layer
@@ -41,7 +43,7 @@ class Discriminator(nn.Module):
             nn.Conv2d(in_channels=ndf*4, out_channels=ndf*8, kernel_size=4, stride=2, padding=1),
             nn.BatchNorm2d(num_features=ndf*8),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.Conv2d(in_channels=ndf*8, out_channels=1, kernel_size=6),
+            nn.Conv2d(in_channels=ndf*8, out_channels=1, kernel_size=self.ds_size),
             nn.Sigmoid()
         )
     
