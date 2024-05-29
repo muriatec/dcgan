@@ -21,6 +21,5 @@ class Generator(nn.Module):
             nn.Tanh()
         )
         
-
     def forward(self, x):
         return self.main(x)
