@@ -4,13 +4,16 @@ import torchvision
 from tqdm import tqdm
 from dcgan import Generator, Discriminator,init_weights
 import numpy as np
+import torchvision.transforms as transforms
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision.datasets import STL10
 
 def main(args):
     if args.dataset=="stl-10":
-        train_dataset=STL10('./dataset',split='unlabeled',download=True)
+        train_dataset=STL10('./dataset',split='unlabeled',download=True, transform=transforms.Compose(
+            [transforms.ToTensor()]
+        ))
         trainloader = DataLoader(train_dataset, batch_size=128, shuffle=True,num_workers=2)
     generator=Generator()
     discriminator=Discriminator()
@@ -22,19 +25,20 @@ def main(args):
     generator.apply(init_weights)
     discriminator.apply(init_weights)
 
-    optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-    optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+    optimizer_G = torch.optim.Adam(generator.parameters(), lr=args.lr, betas=(args.b1, args.b2))
+    optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=args.lr, betas=(args.b1, args.b2))
 
-    generator.train()
-    discriminator.train()
+    # generator.train()
+    # discriminator.train()
     for epoch in range(args.epochs):
         for item in tqdm(trainloader):
-            print(item)
+            # print(item)
             input=item[0]
-            valid = Variable(torch.cuda.FloatTensor(input.shape[0], 1).fill_(1.0), requires_grad=False)
-            fake = Variable(torch.cuda.FloatTensor(input.shape[0], 1).fill_(0.0), requires_grad=False)
+            input=input.to('cuda')
+            valid = torch.full((input.shape[0],1), 1.0,dtype=torch.float,device='cuda')
+            fake = torch.full((input.shape[0], 1), 0.0,dtype=torch.float,device='cuda')
             optimizer_G.zero_grad()
-            z = Variable(torch.cuda.Floattensor(np.random.normal(0, 1, (input.shape[0], 100))))
+            z = torch.randn((input.shape[0], 100,1,1),device='cuda')
             gen_imgs = generator(z)
             g_loss = adversarial_loss(discriminator(gen_imgs), valid)
 
@@ -50,10 +54,7 @@ def main(args):
 
             d_loss.backward()
             optimizer_D.step()
-            print(
-            "[Epoch %d/%d] [D loss: %f] [G loss: %f]"
-            % (epoch, args.epochs, d_loss.item(), g_loss.item())
-            )
+            print("[Epoch %d/%d] [D loss: %f] [G loss: %f]"% (epoch, args.epochs, d_loss.item(), g_loss.item()))
             
 
     
@@ -61,7 +62,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()          
-    parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")  
+    parser.add_argument("--epochs", type=int, default=20, help="number of epochs of training")  
     parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")          
     parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")            
     parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient") 
