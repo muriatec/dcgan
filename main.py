@@ -1,6 +1,10 @@
 import argparse
 import torch
 import torchvision
+from tqdm import tqdm
+from dcgan import Generator, Discriminator,init_weights
+import numpy as np
+from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision.datasets import STL10
 
@@ -8,10 +12,49 @@ def main(args):
     if args.dataset=="stl-10":
         train_dataset=STL10('./dataset',split='unlabeled',download=True)
         trainloader = DataLoader(train_dataset, batch_size=128, shuffle=True,num_workers=2)
-    generator=generator()
-    discriminator=discriminator()
+    generator=Generator()
+    discriminator=Discriminator()
+    adversarial_loss = torch.nn.BCELoss()
+    
+    generator.cuda()
+    discriminator.cuda()
+    adversarial_loss.cuda()
+    generator.apply(init_weights)
+    discriminator.apply(init_weights)
 
+    optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+    optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+
+    generator.train()
+    discriminator.train()
     for epoch in range(args.epochs):
+        for item in tqdm(trainloader):
+            print(item)
+            input=item[0]
+            valid = Variable(torch.cuda.FloatTensor(input.shape[0], 1).fill_(1.0), requires_grad=False)
+            fake = Variable(torch.cuda.FloatTensor(input.shape[0], 1).fill_(0.0), requires_grad=False)
+            optimizer_G.zero_grad()
+            z = Variable(torch.cuda.Floattensor(np.random.normal(0, 1, (input.shape[0], 100))))
+            gen_imgs = generator(z)
+            g_loss = adversarial_loss(discriminator(gen_imgs), valid)
+
+            g_loss.backward()
+            optimizer_G.step()
+
+            optimizer_D.zero_grad()
+
+            
+            real_loss = adversarial_loss(discriminator(input), valid)
+            fake_loss = adversarial_loss(discriminator(gen_imgs.detach()), fake)
+            d_loss = (real_loss + fake_loss) / 2
+
+            d_loss.backward()
+            optimizer_D.step()
+            print(
+            "[Epoch %d/%d] [D loss: %f] [G loss: %f]"
+            % (epoch, args.epochs, d_loss.item(), g_loss.item())
+            )
+            
 
     
 
