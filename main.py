@@ -1,6 +1,7 @@
 import argparse
 import torch
 import torchvision
+from torchvision.utils import save_image
 from tqdm import tqdm
 from dcgan import Generator, Discriminator,init_weights
 import numpy as np
@@ -30,6 +31,7 @@ def main(args):
 
     # generator.train()
     # discriminator.train()
+    batches_done=0
     for epoch in range(args.epochs):
         for item in tqdm(trainloader):
             # print(item)
@@ -55,6 +57,10 @@ def main(args):
             d_loss.backward()
             optimizer_D.step()
             print("[Epoch %d/%d] [D loss: %f] [G loss: %f]"% (epoch, args.epochs, d_loss.item(), g_loss.item()))
+                 
+            batches_done = batches_done+1
+            if batches_done % 150 == 0:
+                save_image(gen_imgs.data[:25], "./save/images/%d.png" % batches_done, nrow=5, normalize=True)
             
 
     
