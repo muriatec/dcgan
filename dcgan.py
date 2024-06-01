@@ -48,7 +48,7 @@ class Discriminator(nn.Module):
         )
     
     def forward(self, x):
-        return self.main(x),(2,3)
+        return self.main(x)
     
 
 def init_weights(m):

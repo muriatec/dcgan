@@ -1,6 +1,7 @@
 import argparse
 import torch
 import torchvision
+from torchvision.utils import save_image
 from tqdm import tqdm
 from dcgan import Generator, Discriminator, init_weights
 import numpy as np
@@ -76,7 +77,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()          
     parser.add_argument("--epochs", type=int, default=10, help="number of epochs of training")  
-    parser.add_argument("--batch_size", type=int, default=128, help="size of the batches")          
+    parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")          
     parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")            
     parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient") 
     parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient") 
