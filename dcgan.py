@@ -48,7 +48,7 @@ class Discriminator(nn.Module):
         )
     
     def forward(self, x):
-        return torch.squeeze(self.main(x),(2,3))
+        return self.main(x),(2,3)
     
 
 def init_weights(m):
