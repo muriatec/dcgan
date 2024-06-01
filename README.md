@@ -1,1 +1,1 @@
-# ECE 285-DCGAN
+# DCGAN
